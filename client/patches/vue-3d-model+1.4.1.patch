@@ -1,0 +1,13 @@
+diff --git a/node_modules/vue-3d-model/dist/vue-3d-model.umd.js b/node_modules/vue-3d-model/dist/vue-3d-model.umd.js
+index a40eea1..a075bf3 100644
+--- a/node_modules/vue-3d-model/dist/vue-3d-model.umd.js
++++ b/node_modules/vue-3d-model/dist/vue-3d-model.umd.js
+@@ -69090,7 +69090,7 @@ class PLYLoader_PLYLoader extends Loader {
+   methods: {
+     getObject: function getObject(geometry) {
+       geometry.computeVertexNormals();
+-      return new Mesh(geometry, new MeshStandardMaterial());
++      return new Mesh(geometry, new MeshStandardMaterial({vertexColors: true}));
+     }
+   }
+ });

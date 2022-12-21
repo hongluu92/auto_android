@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: auto_mobile:${STOCKVN_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      STOCKVN_HOST: 0.0.0.0
+      STOCKVN_DB_HOST: auto_mobile-db
+      STOCKVN_DB_PORT: 5432
+      STOCKVN_DB_USER: auto_mobile
+      STOCKVN_DB_PASS: auto_mobile
+      STOCKVN_DB_BASE: auto_mobile
+
+  db:
+    image: postgres:13.8-bullseye
+    hostname: auto_mobile-db
+    environment:
+      POSTGRES_PASSWORD: "auto_mobile"
+      POSTGRES_USER: "auto_mobile"
+      POSTGRES_DB: "auto_mobile"
+    volumes:
+    - auto_mobile-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U auto_mobile
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  migrator:
+    image: auto_mobile:${STOCKVN_VERSION:-latest}
+    restart: "no"
+    command: alembic upgrade head
+    environment:
+      STOCKVN_DB_HOST: auto_mobile-db
+      STOCKVN_DB_PORT: 5432
+      STOCKVN_DB_USER: auto_mobile
+      STOCKVN_DB_PASS: auto_mobile
+      STOCKVN_DB_BASE: auto_mobile
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+
+volumes:
+  auto_mobile-db-data:
+    name: auto_mobile-db-data
