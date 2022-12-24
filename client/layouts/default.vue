@@ -2,7 +2,7 @@
   <a-config-provider :locale="locale">
     <a-layout>
       <Nav />
-      <Breadcrumb style="margin-top: 56px; margin-bottom: 8px" />
+      <Breadcrumb style="margin-top: 86px; margin-bottom: 8px" />
 
       <nuxt class="card-atv"> </nuxt>
       <Footer />

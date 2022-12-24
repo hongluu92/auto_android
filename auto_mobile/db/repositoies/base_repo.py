@@ -1,7 +1,9 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-
+from sqlalchemy.exc import IntegrityError
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+
+from auto_mobile.errors.http_res_err import HttpResException 
 from ..models.base import Base
 from sqlalchemy.orm import Session
 ModelType = TypeVar("ModelType", bound=Base)
@@ -19,24 +21,37 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         * `model`: A SQLAlchemy model class
         * `schema`: A Pydantic model (schema) class
         """
-        self.model = model
+        self.model : Type[ModelType] = model
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 100
+        self, db: Session, offset: int = 0, limit: int = 100
     ) -> List[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+        return db.query(self.model).offset(offset).limit(limit).all()
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)  # type: ignore
-        db.add(db_obj)
-        db.flush()
-        db.commit()
-        db.refresh(db_obj)
+        try:
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+        except IntegrityError as ie:
+            raise HttpResException("Duplicate data", "sql_duplicate", ie.args)
         return db_obj
+    def update_simple(
+        self,
+        db: Session,
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
+        try:
+            db_obj = self.model(**obj_in) 
+            db.commit()
+        except IntegrityError as ie:
+            raise HttpResException("Duplicate data", "sql_duplicate", ie.args)
+        return obj_in
 
     def update(
         self,
@@ -53,9 +68,13 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
+        try:
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+
+        except IntegrityError as ie:
+            raise HttpResException("Duplicate data", "sql_duplicate", ie.args)
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> ModelType:

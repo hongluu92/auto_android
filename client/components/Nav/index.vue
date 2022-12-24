@@ -1,69 +1,29 @@
 <template>
-  <a-layout-header
-    class="navbar-atv"
-    :style="{ position: 'fixed', zIndex: 1000, width: '100%' }"
+  <a-row
+    class="header-content shadow" style="background: white;width: 100%;position: fixed;"
   >
     <div
       class="
-        ant-col-xs-12
-        ant-col-sm-12
-        ant-col-md-18
-        ant-col-lg-19
-        ant-col-xl-19
-        ant-col-xxl-20
+      ant-col-xs-0 ant-col-sm-0 ant-col-md-18 ant-col-lg-19 ant-col-xl-19 ant-col-xxl-20
       "
     >
-      <a-menu mode="horizontal" :style="{ background: '#0052CC' }">
-        <a-menu-item>
-          <nuxt-link :to="'/'">
-            <a-button class="home-btn" type="primary" icon="home"
-              >Home</a-button
-            >
-          </nuxt-link>
-        </a-menu-item>
+      <a-menu mode="horizontal">
+        
       </a-menu>
     </div>
 
     <div
       class="
-        ant-col-xs-12
-        ant-col-sm-12
-        ant-col-md-6
-        ant-col-lg-5
-        ant-col-xl-5
-        ant-col-xxl-4
-        header-left
-        right-tool-bar
+      ant-col-xs-24 ant-col-sm-24 ant-col-md-6 ant-col-lg-5 ant-col-xl-5 ant-col-xxl-4 header-left right-tool-bar
       "
     >
-      <div class="text-right">
-        <a-dropdown v-if="isAdmin" class="mt-2" :trigger="['click']">
-          <a-menu slot="overlay" mode="horizontal">
-            <a-menu-item @click="goToUserManagementPage">
-              <a-icon type="team" />
-              <span>User Management</span>
-            </a-menu-item>
-          </a-menu>
-
-          <a-tooltip
-            title="Admin area"
-            :getPopupContainer="(a) => a.parentNode"
-          >
-            <a-button
-              style="margin-left: 8px; bottom: 8px"
-              type="primary"
-              icon="bank"
-              shape="circle"
-            />
-          </a-tooltip>
-        </a-dropdown>
+      
 
         <a-menu
           mode="horizontal"
-          :style="{ background: '#0052CC' }"
           class="float-right"
         >
-          <a-sub-menu style="color: white">
+          <a-sub-menu>
             <span slot="title">
               <a-icon type="user" />
               Hello
@@ -81,9 +41,8 @@
             </a-menu-item>
           </a-sub-menu>
         </a-menu>
-      </div>
     </div>
-  </a-layout-header>
+  </a-row>
 </template>
 
 <script>
@@ -109,6 +68,9 @@ export default {
 </script>
 
 <style>
+.shadow {
+  box-shadow: 0 0.15rem 1.75rem 0 rgb(58 59 69 / 15%);
+}
 .ant-menu-item .home-btn .anticon {
   min-width: 14px;
   margin-right: 0px;
@@ -124,5 +86,59 @@ export default {
 .cust-menu .ant-dropdown-menu-item,
 .ant-dropdown-menu-submenu-title {
   margin: 5px;
+}
+
+.cust-menu .ant-dropdown-menu-item,
+.ant-dropdown-menu-submenu-title {
+  margin: 5px;
+}
+
+.ant-drawer-body {
+  padding: 0px;
+}
+.ant-drawer-body .ant-menu-submenu-title .menu-title {
+  color: black;
+}
+.ant-drawer.ant-drawer-top.ant-drawer-open {
+  top: 47px;
+  z-index: 10;
+}
+.ant-drawer.ant-drawer-top {
+  z-index: 10;
+}
+.mobile-menu {
+  display: grid;
+  grid-template-columns: 33% 33% 33%;
+}
+.mobile-menu i.ant-menu-submenu-arrow {
+  display: none;
+}
+.mobile-menu .menu-title * {
+  display: flex;
+  justify-content: center;
+}
+.mobile-menu:before {
+  content: none;
+}
+.ant-drawer-content-wrapper {
+  height: auto !important;
+}
+.mobile-menu li {
+  margin: 10px 0px;
+}
+.mobile-menu .ant-menu-submenu-title {
+  overflow: visible;
+}
+.mobile-menu .ant-menu-item:last-child {
+  margin: auto auto;
+}
+.mobile-menu .ant-btn.ant-btn-primary {
+  padding: 5px;
+}
+.mobile-menu .fa-plus {
+  margin-right: 3px !important;
+}
+.mobile-menu .ant-menu-item {
+  margin-top: 14px;
 }
 </style>

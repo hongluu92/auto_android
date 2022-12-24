@@ -1,7 +1,7 @@
 <template>
   <a-layout-footer style="text-align: center">
     <span
-      >Copyright © {{ new Date().getFullYear() }} TRI-ARROW Corporation</span
+      >Copyright © {{ new Date().getFullYear() }} Ruby</span
     >
   </a-layout-footer>
 </template>

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Identity
 from sqlalchemy.orm import relationship
 from .base import Base
+from .script import Script
 
 class ScriptAction(Base):
     __tablename__ = "script_actions"
@@ -21,4 +22,4 @@ class ScriptAction(Base):
     loop_delay = Column(Integer, default= 1000)
     description = Column(String)
     script_id = Column(Integer, ForeignKey("scripts.id"))
-    script  = relationship("Script", back_populates="actions")  
+    script:Script   = relationship("Script", back_populates="actions")  

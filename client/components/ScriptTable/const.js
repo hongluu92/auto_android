@@ -19,11 +19,19 @@ export const columns = (context) => [
     scopedSlots: { customRender: "loop" },
   },
   {
-    slots: { title: "Loop Delay" },
+    title: "Loop Delay" ,
     dataIndex: "loop_delay",
     key: "loop_delay",
-    scopedSlots: { customRender: "loop_delay" },
-    width: 105,
+    scopedSlots: { customRender: "loop_delay" }
   },
+  {
+    slots: { title: "actionTitle" },
+    dataIndex: "action",
+    key: "action",
+    scopedSlots: { customRender: "action" },
+    width: 145,
+  },
+
 ];
 
+ 

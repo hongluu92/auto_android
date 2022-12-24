@@ -27,7 +27,7 @@ export default {
   css: ["ant-design-vue/dist/antd.css", "~/css/main.css"],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ["@/plugins/antd-ui", "@/plugins/axios"],
+  plugins: ["@/plugins/antd-ui", "@/plugins/axios", { src: "@/plugins/vuekonva", mode: 'client' }],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -67,7 +67,7 @@ export default {
   env: { ...parsed },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
-  build: {},
+  build: {transpile: ['konva']},
   server: {
     host: '0.0.0.0', // default: localhost
     port: process.env.PORT

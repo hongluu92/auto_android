@@ -9,6 +9,17 @@
           style="max-width: 250px"
         />
       </a-col>
+      <a-col :span="12" class="text-right">
+        <a-button
+          class="mb-2"
+          type="primary"
+          ghost
+          icon="plus"
+          @click="script_popup_visible = true; init_form_state()"
+          >Add new Script</a-button
+        >
+      </a-col>
+      
     </a-row>
     <a-table
       ref="table"
@@ -25,7 +36,18 @@
       <template slot="action" slot-scope="text, record">
         <div class="text-center">
           <a-tooltip
-            title="Detail"
+            title="Sửa thông tin Script"
+            :arrowPointAtCenter="true"
+            :getPopupContainer="(a) => a.parentNode"
+          >
+            <a-button
+              type="primary"
+              icon="edit"
+              @click="script_popup_visible = true; formState = {...record}"
+            ></a-button>
+          </a-tooltip>
+          <a-tooltip
+            title="Hiển thị danh sách Script Actions"
             :arrowPointAtCenter="true"
             :getPopupContainer="(a) => a.parentNode"
           >
@@ -52,6 +74,27 @@
       <template slot="actionTitle"> Action </template>
 
     </a-table>
+    <!-- Popup create Script -->
+    <a-modal v-model="script_popup_visible" title="Create new Script" okText="Save"  @ok="handleSaveScript">
+      <a-form :model="formState">
+        <a-form-item label="Script name">
+          <a-input v-model:value="formState.name" />
+        </a-form-item>
+        <a-form-item label="Game">
+          <a-select v-model:value="formState.game" placeholder="Chọn game">
+            <a-select-option value="tan_thien_long">Tân Thiên Long</a-select-option>
+            <a-select-option value="taoist">Taoist</a-select-option>
+            <a-select-option value="tlbb2">Taoist</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Loop">
+          <a-input v-model:value="formState.loop" />
+        </a-form-item>
+        <a-form-item label="Loop Delay">
+          <a-input v-model:value="formState.loop_delay" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
   </div>
 </template>
@@ -59,7 +102,6 @@
 <script>
 import { columns} from "./const";
 import * as CONST from "@/constants/index.js";
-import FilterDropdownTable from "@/components/FilterDropdownTable";
 import { mapActions, mapState } from "vuex";
 import debounce from "lodash.debounce";
 import baseMixin from "@/mixins/baseMixin";
@@ -72,13 +114,21 @@ export default {
       CONST,
       filterUserId: [],
       pagination: {
-        pageSize: 10,
+        pageSize: 100,
         total: 0,
         current: 1,
       },
       searchKeyword: "",
       visible: false,
       expandedRowKeys: [],
+      script_popup_visible: false,
+      is_add: false,
+      formState: {
+        "name": "",
+        "game": "tan_thien_long",
+        "loop": 1,
+        "loop_delay": 1000
+      }
     };
   },
   computed: {
@@ -94,7 +144,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["fetchScriptList", "deleteScript"]),
+    ...mapActions(["fetchScriptList", "deleteScript", "createScript", "updateScript"]),
     async handleTableChange(pagination, filters, sorter) {
       this.pagination = pagination;
       if (!this.pagination.current) {
@@ -107,7 +157,31 @@ export default {
       await this.getScriptList();
     },
     handleViewDetails(record) {
-      this.$router.push({ path: `process/${record.id}` });
+      this.$router.push({ path: `script/${record.id}/script-action` });
+    },
+    init_form_state(){
+      this.formState =  {
+        "id": null,
+        "name": "",
+        "game": "tan_thien_long",
+        "loop": 1,
+        "loop_delay": 1000
+      }
+    },
+    async handleSaveScript(){
+      this.script_popup_visible = false
+      if (this.formState.id){
+        await this.updateScript(this.formState);
+      }else {
+        await this.createScript(this.formState);
+      }
+      
+      this.getScriptList();
+
+      this.$notification.success({
+        message: "Success",
+        description: "Cập nhật script thành công",
+      });
     },
     async getScriptList() {
       const params = {
@@ -154,7 +228,6 @@ export default {
     },
   },
   created() {
-    // this.filterUserId = [this.currentUser.id];
     this.getScriptList();
   },
 };
