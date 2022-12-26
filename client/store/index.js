@@ -7,7 +7,8 @@ export const state = () => ({
   scriptListTotal: 0,
   paramList: null,
   model: null,
-  script: null  
+  script: null , 
+  scriptActionList: []
 });
 
 export const mutations = {
@@ -22,6 +23,9 @@ export const mutations = {
   },
   setScript(state, payload) {
     state.script = payload;
+  },
+  setScriptActions(state, payload) {
+    state.scriptActionList = payload;
   },
   setCurrentModel(state, payload) {
     // retain the config having config id == "new" if the new trainingParams array length is shorter than the current trainingParams array length
@@ -79,6 +83,13 @@ export const actions = {
     const { data }  =  await this.$axios.get(`${API_BASE_URL}/api/v1/scripts/${id}`);
     script =  data;
     commit("setScript",script);
+    return script
+  },
+  async getScriptActions({ commit }, script_id) {
+    let script = null
+    const { data }  =  await this.$axios.get(`${API_BASE_URL}/api/v1/scripts?script_id=${script_id}`);
+    script =  data;
+    commit("setScriptActions",script);
     return script
   },
   async reload_current_img ({ commit }){

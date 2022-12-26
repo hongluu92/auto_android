@@ -113,10 +113,13 @@ def reloadCurrentImg() -> Any:
     """
     Create Scripts
     """
-    device = getDevice()
-    img = device.screencap()
-    nparr = np.asarray(bytearray(img), dtype=np.uint8)
-    img_np = cv2.imdecode(nparr, cv2.COLOR_BGR2GRAY)
-    #img_gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
-    cv2.imwrite(BASE_IMG_URL+CURRENT_IMG,img_np)
+    try:
+        device = getDevice()
+        img = device.screencap()
+        nparr = np.asarray(bytearray(img), dtype=np.uint8)
+        img_np = cv2.imdecode(nparr, cv2.COLOR_BGR2GRAY)
+        #img_gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(BASE_IMG_URL+CURRENT_IMG,img_np)
+    except:
+        raise HttpResException("Không tìm thấy thiết bị", "missing_device")
     return "OK"

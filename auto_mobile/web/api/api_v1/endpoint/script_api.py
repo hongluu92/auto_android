@@ -23,7 +23,7 @@ def get_scripts(
     Get Scripts
     """
     scriptRepo = ScriptRepository(Script)
-    results =  scriptRepo.get_multi(db,page,page_size)
+    results =  scriptRepo.get_multi(db,page - 1,page_size)
     return results
     
 
