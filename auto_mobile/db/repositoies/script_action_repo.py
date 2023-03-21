@@ -1,7 +1,7 @@
 from typing import List
 from .base_repo import BaseRepository
 from ..models.script_action import ScriptAction
-from auto_mobile.web.schema.script_action import ScriptActionVO
+from auto_mobile.web.schema.action import ScriptActionVO
 from sqlalchemy.orm import Session
 
 class ScriptActionRepository(BaseRepository[ScriptAction, ScriptActionVO, ScriptActionVO]):

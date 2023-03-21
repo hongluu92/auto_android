@@ -2,17 +2,19 @@
   <div>
     <h2> {{ script?.name }}</h2>
     <a-row :gutter="24" type="flex" justify="space-between" align="top" v-if="script && current_img">
-      <a-col :md="12" :xs="24" @click.ctrl.exact="onCtrClick()" class="img_layout" style="margin-top: 26px;">
+
+      <a-col :lg=12 :md="12" :xs="24" @click.ctrl.exact="onCtrClick()" class="img_layout">
+        <span><button type="primary" @click="reloadCurrentImage()"><a-icon type="sync" /> Sync</button></span>
         <span style="margin-right: 20px;">Position : {{ Math.round(curMouse.x) }} {{ Math.round(curMouse.y) }}</span>
         <span>Rect (x,y,w,h): {{ Math.round(curRectImage.x) }} {{ Math.round(curRectImage.y) }} {{
-            Math.round(curRectImage.width)
-        }} {{ Math.round(curRectImage.height) }}</span>
+    Math.round(curRectImage.width)
+}} {{ Math.round(curRectImage.height) }}</span>
         <v-stage v-if="current_img" ref="stage" :config="configKonva" @mouseenter="handleMouseEnter('stage')"
           @mousemove="handleMouseMove" @mouseDown="handleMouseDown" @contextmenu="(e) => handleRightClick(e)">
           <v-layer ref="layer">
             <v-image ref="myImg" :config="{
-              image: current_img
-            }" />
+  image: current_img
+}" />
             <v-rect v-if="curRectImage" :key="scriptId + '_image'" :config="curRectImage" @dragend="handleDragEnd" />
             <v-rect v-if="curRectClick" :key="scriptId + '_click'" :config="curRectClick" />
             <v-transformer ref="transformer" />
@@ -24,77 +26,104 @@
         </div>
         <!-- <img class="current-img" :src="current_img" style="height: auto; max-height: 600px !important;" @click="onImgPosition()"/> -->
       </a-col>
-      <a-col :md="12" :xs="24">
+      <a-col :lg=12 :md="12" :xs="24">
         <div class="text-right">
           <a-button type="warning" @click="onRunAll(scripAction)">Run all <a-icon type="caret-right" /></a-button>
-          <a-button><a-icon type="plus" /> Add </a-button>
+          <a-button @click="initNewAction()"><a-icon type="plus" /> Add </a-button>
         </div>
         <a-row style="margin-top: 10px;max-height: 486px;overflow-y: scroll;">
-          <a-card v-for="scripAction, index in scriptActionList" :class="isEditing(scripAction) ? 'active' : ''">
-            <div style="position: absolute; left: 20px; top: 10px; z-index: 100; zoom: 60%;">
+          <a-card v-for="scripAction, index in actionList" :class="isEditing(scripAction) ? 'active' : ''"
+            v-bind:key="index">
+            <div style="margin-bottom: 2px;">
               <a-badge :count="index + 1" :number-style="{
-                backgroundColor: '#fff',
-                color: '#999',
-                boxShadow: '0 0 0 1px #d9d9d9 inset',
-              }" style="margin-right:10px;" />
-              <a-radio-group v-model="scripAction.action_type" button-style="solid" @change="onCtrClick()"
-                :disabled="!isEditing(scripAction)">
-                <a-radio-button :value="CONST.ACTION_TYPE.TAP"> Click </a-radio-button>
-                <a-radio-button :value="CONST.ACTION_TYPE.SWIPE"> Swipe </a-radio-button>
-                <a-radio-button :value="CONST.ACTION_TYPE.TAP_BY_IMAGE">Click by Image</a-radio-button>
-                <a-radio-button :value="CONST.ACTION_TYPE.CHECK_BY_IMAGE">Check by image</a-radio-button>
-                <a-radio-button :value="CONST.ACTION_TYPE.KEY_EVENT">Key event</a-radio-button>
-              </a-radio-group>
+  backgroundColor: '#fff',
+  color: '#999',
+  boxShadow: '0 0 0 1px #d9d9d9 inset',
+}" style="margin-right:10px;" />
+
             </div>
-            <div style="position: absolute; right: 20px; top: 10px; z-index: 100; zoom: 60%;">
+            <div style="position: absolute; right: 20px; top: 10px; z-index: 100; zoom: 70%;">
               <a-button type="warning" @click="onRun(scripAction)">Run <a-icon type="caret-right" /></a-button>
               <a-button type="primary" v-if="!isEditing(scripAction)" @click="onEditing(scripAction)"><a-icon
                   type="edit" />
               </a-button>
-              <a-button v-if="isEditing(scripAction)" @click="curScriptAction = {}">Cancel </a-button>
-              <a-button v-if="isEditing(scripAction)" type="primary" @click="curScriptAction = {} = false"><a-icon
+              <a-button v-if="isEditing(scripAction)" type="primary" @click="saveScripAction(scripAction)"><a-icon
                   type="save" />
                 Save</a-button>
+              <a-button type="danger" @click="deleteScripAction(scripAction)"><a-icon type="delete" />
+              </a-button>
+              <a-button  @click="addBelow(scripAction, index)"><a-icon type="plus" /> Add below
+              </a-button>
             </div>
+            <div>
+              <a-col :md=8 :xs="24">
+                <!-- Image of Script Action -->
+                <a-popover placement="left">
+                  <template #content>
+                    <v-stage v-if="current_img" ref="stage-in-form-{{ scripAction.id }}" :config="configKonvaTooltip"
+                      class="ant-col ant-form-item-control-wrapper">
+                      <v-layer ref="layer">
+                        <v-image ref="myImg" :config="{
+  image: scripAction.image_data
+}" />
+                        <v-rect :key="scripAction.id + '_image_in_form'" :config="getRectImageBy(scripAction)" />
+                        <v-rect :key="scripAction.id + '_click_in_form'" :config="getRectClickBy(scripAction)" />
+                        <v-transformer ref="transformer" />
+                      </v-layer>
 
-            <a-form layout="inline" style="zoom: 80%; margin-top: 3px;">
-              <!-- Image of Script Action -->
-              <a-form-item>
-                <v-stage v-if="current_img" ref="stage-in-form-{{ scripAction.id }}" :config="configKonvaToView"
-                  class="ant-col ant-form-item-control-wrapper">
-                  <v-layer ref="layer">
-                    <v-image ref="myImg" :config="{
-                      image: current_img
-                    }" />
-                    <v-rect v-if="curRectImage" :key="scripAction.id + '_image_in_form'" :config="curRectImage" />
-                    <v-rect v-if="curRectClick" :key="scripAction.id + '_click_in_form'" :config="curRectClick" />
-                    <v-transformer ref="transformer" />
-                  </v-layer>
-                </v-stage>
-              </a-form-item>
-              <a-form-item label="Mô tả" layout="inline">
-                <input :value="scripAction.description" :disabled="!isEditing(scripAction)" />
-              </a-form-item>
-              <a-form-item label="Position" layout="inline"
-                v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP || scripAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || scripAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE">
-                <input v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP" :value="scripAction.tap_position"
-                  disabled="true" style="width: 65px;;" />
-                <input
-                  v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || scripAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE"
-                  :value="scripAction.img_compare_bb" disabled="true" style="width: 112px;;" />
-              </a-form-item>
-              <a-form-item label="Loop" layout="inline">
-                <input :value="scripAction.loop" style="width: 30px;" :disabled="!isEditing(scripAction)" />
-              </a-form-item>
-              <a-form-item label="Delay" layout="inline">
-                <input :value="scripAction.loop" style="width: 50px;" :disabled="!isEditing(scripAction)" />
-              </a-form-item>
-              <a-form-item label="Key Event" layout="inline"
-                v-if="scripAction.action_type == CONST.ACTION_TYPE.KEY_EVENT">
-                <input :value="scripAction.key_event" :disabled="!isEditing(scripAction)" />
-              </a-form-item>
+                    </v-stage>
+                  </template>
+                  <v-stage v-if="current_img" ref="stage-in-form-{{ scripAction.id }}" :config="configKonvaToView"
+                    class="ant-col ant-form-item-control-wrapper">
+                    <v-layer ref="layer">
+                      <v-image ref="myImg" :config="{
+  image: scripAction.image_data
+}" />
+                      <v-rect :key="scripAction.id + '_image_in_form'" :config="getRectImageBy(scripAction)" />
+                      <v-rect :key="scripAction.id + '_click_in_form'" :config="getRectClickBy(scripAction)" />
+                      <v-transformer ref="transformer" />
+                    </v-layer>
 
-            </a-form>
+                  </v-stage>
+                </a-popover>
+              </a-col>
+              <a-col :md=16 :xs="24">
+                <a-form layout="inline" style="zoom: 70%; margin-top: 9px;">
+                  <a-form-item>
+                    <a-radio-group v-model="scripAction.action_type" button-style="solid" @change="onCtrClick()"
+                      :disabled="!isEditing(scripAction)">
+                      <a-radio-button :value="CONST.ACTION_TYPE.TAP"> Click </a-radio-button>
+                      <a-radio-button :value="CONST.ACTION_TYPE.SWIPE"> Swipe </a-radio-button>
+                      <a-radio-button :value="CONST.ACTION_TYPE.TAP_BY_IMAGE">Image Click</a-radio-button>
+                      <a-radio-button :value="CONST.ACTION_TYPE.CHECK_BY_IMAGE">Image Check</a-radio-button>
+                      <a-radio-button :value="CONST.ACTION_TYPE.KEY_EVENT">Key</a-radio-button>
+                    </a-radio-group>
+                  </a-form-item>
+
+                  <a-form-item label="Mô tả">
+                    <input v-model="scripAction.description" :disabled="!isEditing(scripAction)" />
+                  </a-form-item>
+                  <a-form-item label="Position" layout="inline"
+                    v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP || scripAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || scripAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE">
+                    <input v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP" :value="scripAction.tap_position"
+                      disabled="true" style="width: 65px;;" />
+                    <input
+                      v-if="scripAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || scripAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE"
+                      v-model="scripAction.img_compare_bb" disabled="true" style="width: 112px;;" />
+                  </a-form-item>
+                  <a-form-item label="Loop" layout="inline">
+                    <input v-model="scripAction.loop" style="width: 30px;" :disabled="!isEditing(scripAction)" />
+                  </a-form-item>
+                  <a-form-item label="Delay" layout="inline">
+                    <input v-model="scripAction.loop" style="width: 50px;" :disabled="!isEditing(scripAction)" />
+                  </a-form-item>
+                  <a-form-item label="Key Event" layout="inline"
+                    v-if="scripAction.action_type == CONST.ACTION_TYPE.KEY_EVENT">
+                    <input v-model="scripAction.key_event" :disabled="!isEditing(scripAction)" />
+                  </a-form-item>
+                </a-form>
+              </a-col>
+            </div>
           </a-card>
         </a-row>
       </a-col>
@@ -127,7 +156,9 @@ export default {
         x: 0,
         y: 0
       },
-      curScriptAction: {}
+      scale: 0,
+      curAction: {},
+      actionList: []
     };
   },
   async created() {
@@ -135,31 +166,33 @@ export default {
     this.initcurRectClick()
     await this.reload_current_img()
     await this.getScript(this.scriptId);
-    await this.getScriptActions(this.scriptId);
-    this.imagePath = await this.getImgSrc("current_img.png")
-    const image = new window.Image();
-    image.src = this.imagePath;
-    let max_height = 600
-    let max_width = window.innerWidth / 2 - 60
-    image.onload = () => {
-      let scale = Math.min(max_height / image.height, max_width / image.width)
-      image.height = image.height * scale
-      image.width = image.width * scale
-      this.imageHeight = image.height
-      this.imageWidth = image.width
-      this.stageWidth = image.width;
-      this.stageHeight = image.height;
-      this.current_img = image;
+    this.actionList = await this.getActions(this.scriptId);
+    this.actionList.forEach(async action => {
+      let image = new window.Image();
+      image.src = await this.getImgSrc(action.img);
+      image.onload = () => {
 
-    };
-
-
-  },
-  mounted() {
-    window.setTimeout(() => {
-      this.updateStageWidth();
+        action.image_data = image
+      }
     })
-
+    let imagePath = await this.getImgSrc("current_img.png")
+    let max_height = 500
+    let max_width = window.innerWidth / 2 - 60
+    this.loadImage(imagePath, max_height, max_width)
+  },
+  async mounted() {
+    await this.$nextTick()
+    debugger
+  },
+  watch: {
+    curAction() {
+      this.initcurRectClick()
+      this.initcurRectImage()
+      this.curAction.scale = this.scale
+      setTimeout(() => {
+        document.querySelector(".active input").focus()
+      })
+    },
   },
   computed: {
     ...mapState(["script"]),
@@ -194,59 +227,35 @@ export default {
     },
     configKonvaToView() {
       return {
-        width: this.stageWidth / 9,
-        height: this.stageHeight / 9
+        scaleX: (1 / 4) * this.scale,
+        scaleY: (1 / 4) * this.scale,
+        width: this.stageWidth / 4,
+        height: this.stageHeight / 4
+      }
+    },
+    configKonvaTooltip(){
+      return {
+        scaleX: (2 / 3) * this.scale,
+        scaleY: (2 / 3) * this.scale,
+        width: this.stageWidth / 1.5,
+        height: this.stageHeight / 1.5
       }
     },
   },
   methods: {
-    ...mapActions(["getScript", "getImgSrc", "reload_current_img", "getScriptActions"
+    ...mapActions(["getScript", "getImgSrc", "reload_current_img", "getActions", "updateAction", "createAction", "runAction"
     ]),
     ...mapMutations([
-      "scriptActionList"
     ]),
 
     handleDragEnd(e) {
       const rect = this.curRectImage
       rect.x = e.target.x();
       rect.y = e.target.y();
-      this.updateCurScriptActionPosition()
+      this.updateCurActionPosition()
     },
     onImgPosition(e) {
 
-    },
-    zoom(e, refName) {
-      var scaleBy = 1.1;
-      const node = this.$refs[refName].getNode();
-      const stage = node.getStage();
-
-      e.evt.preventDefault();
-
-      var oldScale = stage.scaleX();
-      var pointer = stage.getPointerPosition();
-
-      var mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
-
-      let direction = e.evt.deltaY > 0 ? -1 : 1;
-      if (e.evt.ctrlKey) {
-        direction = -direction;
-      }
-
-      var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-      newScale = Math.max(
-        refName.indexOf("2") > -1 ? this.minScale2 : this.minScale,
-        newScale
-      );
-      stage.scale({ x: newScale, y: newScale });
-
-      var newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-      stage.position(newPos);
     },
     handleMouseEnter(refName) {
       const node = this.$refs[refName].getNode();
@@ -276,13 +285,12 @@ export default {
         const stage = e.target.getStage();
         const stageLocation = stage.getPointerPosition();
         this.isDrawing = true
-        if (this.curScriptAction.action_type) {
-          if (this.curScriptAction.action_type == CONST.ACTION_TYPE.TAP) {
+        if (this.curAction.action_type) {
+          if (this.curAction.action_type == CONST.ACTION_TYPE.TAP) {
             this.curRectClick.x = stageLocation.x;
             this.curRectClick.y = stageLocation.y;
             this.curRectClick.width = 10;
             this.curRectClick.height = 10;
-            console.log(this.curRectClick)
           } else {
             this.curRectImage.x = stageLocation.x;
             this.curRectImage.y = stageLocation.y;
@@ -294,7 +302,7 @@ export default {
           }
         }
       }
-      this.updateCurScriptActionPosition()
+      this.updateCurActionPosition()
       // change fill
     },
     updateTransformer() {
@@ -331,6 +339,21 @@ export default {
         draggable: true,
       }
     },
+    getRectImageBy(action) {
+      if (action.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || action.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE) {
+        if (!action.img_compare_bb) return {}
+        let pos = action.img_compare_bb.split(" ")
+        return {
+          x: pos[0]/this.scale,
+          y: pos[1]/this.scale,
+          width: pos[2]/this.scale,
+          height: pos[3]/this.scale,
+          stroke: 'red',
+        }
+      }
+      return {}
+
+    },
     initcurRectClick() {
       this.curRectClick = {
         x: 0,
@@ -341,30 +364,120 @@ export default {
         cornerRadius: 15
       }
     },
+    getRectClickBy(action) {
+      if (action.action_type == CONST.ACTION_TYPE.TAP) {
+        if (!action.tap_position) return {}
+        let pos = action.tap_position.split(" ")
+        return {
+          x: pos[0]/this.scale,
+          y: pos[1]/this.scale,
+          width: 20,
+          height: 20,
+          fill: 'red',
+          cornerRadius: 15
+        }
+      }
+      return {}
+
+    },
+    initAction() {
+      return {
+        "action_type": "tap",
+        "event_type": null,
+        "tap_position": null,
+        "swipe_position": null,
+        "img_compare_bb": null,
+        "key_event": null,
+        "img": null,
+        "loop": 1,
+        "loop_delay": 1000,
+        "description": null,
+        "script_id": this.scriptId,
+        "order_index": 0,
+        "parrent_id": null,
+        "new_thread": false
+      }
+    },
+    initNewAction() {
+      let action = this.initAction()
+      this.curAction = action
+      if (this.actionList[this.actionList.length - 1])
+        action.order_index = this.actionList[this.actionList.length - 1].order_index + 100
+      else action.order_index = 1
+      this.actionList.push(action)
+    },
+    addBelow(action, index){
+      action = this.initAction()
+      this.curAction = action
+      this.actionList.splice(index+1, 0, action);
+    },
+    saveScripAction(action) {
+      if (!action.id) {
+        this.curAction = this.createAction(action)
+      } else {
+        this.curAction = this.updateAction(action)
+      }
+    },
+    deleteScripAction(action) {
+      if (action.id) {
+        this.curAction = this.createAction(action.id)
+      }
+      this.curAction = {}
+      this.actionList = this.actionList.filter(function (item) {
+        return item.id != undefined && action.id != item.id
+      })
+    },
     onEditing(scripAction) {
-      this.curScriptAction = scripAction
+      this.curAction = scripAction
     },
     isEditing(scripAction) {
-      return this.curScriptAction.id == scripAction.id
+      return this.curAction.id == scripAction.id
     },
-    onRun(scripAction) {
-
+    async reloadCurrentImage() {
+      await this.reload_current_img()
+      let imagePath = await this.getImgSrc(`current_img.png?random=${new Date().getTime()}`)
+      let max_height = 500
+      let max_width = window.innerWidth / 2 - 60
+      this.loadImage(imagePath, max_height, max_width)
     },
-    onRunAll(scripAction) {
-
+    async onRun(scripAction) {
+      await this.runAction(scripAction)
+      this.reloadCurrentImage()
+    },
+    timeout(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    },
+    async onRunAll(scripAction) {
+      this.actionList 
     },
     onCtrClick() {
       this.initcurRectImage()
       this.initcurRectClick()
     },
-    updateCurScriptActionPosition() {
-      if (this.curScriptAction.action_type == CONST.ACTION_TYPE.TAP) {
-        this.curScriptAction.tap_position = `${Math.round(this.curRectClick.x)} ${Math.round(this.curRectClick.y)}`
+    updateCurActionPosition() {
+      if (this.curAction.action_type == CONST.ACTION_TYPE.TAP) {
+        this.curAction.tap_position = `${Math.round(this.curRectClick.x)} ${Math.round(this.curRectClick.y)}`
       }
-      if (this.curScriptAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || this.curScriptAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE) {
-        this.curScriptAction.img_compare_bb = `${Math.round(this.curRectImage.x)} ${Math.round(this.curRectImage.y)} ${Math.round(this.curRectImage.width)} ${Math.round(this.curRectImage.height)}`
+      if (this.curAction.action_type == CONST.ACTION_TYPE.TAP_BY_IMAGE || this.curAction.action_type == CONST.ACTION_TYPE.CHECK_BY_IMAGE) {
+        this.curAction.img_compare_bb = `${Math.round(this.curRectImage.x)} ${Math.round(this.curRectImage.y)} ${Math.round(this.curRectImage.width)} ${Math.round(this.curRectImage.height)}`
       }
     },
+
+    loadImage(imagePath, max_height, max_width) {
+      const image = new window.Image();
+      image.src = imagePath;
+      image.onload = () => {
+        this.scale = Math.min(max_height / image.height, max_width / image.width)
+        image.height = image.height * this.scale
+        image.width = image.width * this.scale
+        this.imageHeight = image.height
+        this.imageWidth = image.width
+
+        this.stageWidth = image.width;
+        this.stageHeight = image.height;
+        this.current_img = image;
+      };
+    }
 
   },
   beforeDestroy() {
@@ -382,7 +495,7 @@ export default {
 }
 
 .current-img {
-  border: solid 1px gray;
+  border: solid 1px black;
 }
 
 .ant-form-item {
@@ -395,14 +508,18 @@ export default {
 }
 
 .ant-card-body {
-  padding: 26px 5px 5px 9px;
+  padding: 5px 5px 5px 9px;
 }
 
 .active {
   border: solid red 1px;
 }
 
+button {
+  cursor: pointer;
+}
+
 .img_layout {
-  margin-top: 26px;
+  margin-top: 25px;
 }
 </style>

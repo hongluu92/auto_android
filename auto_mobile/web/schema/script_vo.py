@@ -12,3 +12,9 @@ class ScriptVO(BaseModel):
     loop_delay: int = 1000
     class Config:
         orm_mode = True
+
+class ScriptRefVO :
+    child_id: int 
+    parrent: int = None
+    loop: int = 1
+    loop_delay = 1000

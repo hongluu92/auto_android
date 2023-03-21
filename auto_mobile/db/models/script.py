@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 
 if TYPE_CHECKING:
-    from .script_action import ScriptAction
+    from .action import Action
 
 class Script(Base):
     __tablename__ = "scripts"
@@ -14,6 +14,6 @@ class Script(Base):
     game = Column(String)
     loop = Column(Integer, default= 0)
     loop_delay = Column(Integer, default= 1)
-    actions  = relationship("ScriptAction", back_populates="script")
+    scriptActions  = relationship("ScriptAction", back_populates="script")
 
 

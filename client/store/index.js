@@ -8,7 +8,7 @@ export const state = () => ({
   paramList: null,
   model: null,
   script: null , 
-  scriptActionList: []
+  actionList: []
 });
 
 export const mutations = {
@@ -24,8 +24,8 @@ export const mutations = {
   setScript(state, payload) {
     state.script = payload;
   },
-  setScriptActions(state, payload) {
-    state.scriptActionList = payload;
+  setActions(state, payload) {
+    state.actionList = payload;
   },
   setCurrentModel(state, payload) {
     // retain the config having config id == "new" if the new trainingParams array length is shorter than the current trainingParams array length
@@ -85,15 +85,29 @@ export const actions = {
     commit("setScript",script);
     return script
   },
-  async getScriptActions({ commit }, script_id) {
-    let script = null
-    const { data }  =  await this.$axios.get(`${API_BASE_URL}/api/v1/scripts?script_id=${script_id}`);
-    script =  data;
-    commit("setScriptActions",script);
-    return script
+  async getActions({ commit }, script_id) {
+    const { data }  =  await this.$axios.get(`${API_BASE_URL}/api/v1/script-actions?script_id=${script_id}`);
+    let actions =  data;
+    if (actions)
+      return actions
+    else return []
+  },
+  async updateAction({ commit }, payload) {
+    console.log(payload)
+    const { data }  =  await this.$axios.put(`${API_BASE_URL}/api/v1/script-actions?script_id=${payload.script_id}`, payload);
+    let action =  data;
+    return action
+  },
+  async createAction({ commit }, payload) {
+    const { data }  =  await this.$axios.post(`${API_BASE_URL}/api/v1/script-actions?script_id=${payload.script_id}`, payload);
+    let action =  data;
+    return action
   },
   async reload_current_img ({ commit }){
     const { data }  =  await this.$axios.post(`${API_BASE_URL}/api/v1/script-actions/reload-current-img`);
+  },
+  async runAction({ commit }, payload) {
+    const { data }  =  await this.$axios.post(`${API_BASE_URL}/api/v1/script-actions/run`, payload);
   },
   getImgSrc({ commit }, img_path){
     return `${API_BASE_URL}/static/imgs/${img_path}`

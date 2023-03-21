@@ -8,12 +8,12 @@ import cv2
 import numpy as np
 from auto_mobile.db import dependencies
 from auto_mobile.db.models import Action
-from auto_mobile.db.repositoies.script_action_repo import ScriptActionRepository
+from auto_mobile.db.repositoies.action_repo import ActionRepository
 from sqlalchemy.orm import Session
 from auto_mobile.errors.http_res_err import HttpResException
 from auto_mobile.web.const import ActionType
 
-from auto_mobile.web.schema.action import ScriptActionVO
+from auto_mobile.web.schema.action import ActionVO, ActionVOCreated
 import time
 from loguru import logger
 import os
@@ -40,8 +40,8 @@ def getDevice() -> List[Device]:
 
     return devices[0]
 
-@router.get("/", response_model= List[ScriptActionVO], status_code=201)
-def get_action(
+@router.get("/", response_model= List[ActionVO], status_code=201)
+def get_actions(
     script_id:int ,
     db :Session = Depends(dependencies.get_db_session) ,
     page_size: int = 100,
@@ -49,30 +49,30 @@ def get_action(
     
 ) -> Any:
     """
-    Get Script action
+    Get Actions
     """
     if script_id == 0:
         raise HttpResException("Missing script_id", "missing_script_id")
-    scriptActionRepo = ScriptActionRepository()
-    results =  scriptActionRepo.get_multi_by_script_id(db,script_id,page,page_size)
+    scriptRepo = ActionRepository()
+    results =  scriptRepo.get_multi_by_script_id(db,script_id,page,page_size)
     for result in results:
-        yield ScriptActionVO.from_orm(result)
+        yield ActionVO.from_orm(result)
     
 
 
-@router.post("/", response_model= ScriptActionVO, status_code=201)
+@router.post("/", response_model= ActionVO, status_code=201)
 def create_action(
     *,
     db :Session = Depends(dependencies.get_db_session) ,
-    actionVO: ScriptActionVO
+    actionVO: ActionVOCreated
 ) -> Any:
     """
-    Create Script action
+    Create Action
     """
     # if actionVO.action_type == ActionType.TAP_BY_IMAGE or actionVO.action_type == ActionType.CHECK_BY_IMAGE:
    
-    scriptActionRepo = ScriptActionRepository()
-    scripActionDb = scriptActionRepo.create(db = db,obj_in = actionVO)
+    scriptRepo = ActionRepository()
+    scripActionDb = scriptRepo.create(db = db,obj_in = actionVO)
     device = getDevice()
     img = device.screencap()
     nparr = np.asarray(bytearray(img), dtype=np.uint8)
@@ -85,16 +85,16 @@ def create_action(
     cv2.imwrite(BASE_IMG_URL+ image_path,image)
     actionVO.img = image_path
     actionVO.id = scripActionDb.id
-    return scriptActionRepo.update(db = db, db_obj=scripActionDb, obj_in = actionVO)
+    return scriptRepo.update(db = db, db_obj=scripActionDb, obj_in = actionVO)
 
-@router.put("/", response_model= ScriptActionVO, status_code=201)
-def update_action(
+@router.put("/", response_model= ActionVOCreated, status_code=201)
+def update_Action(
     *,
     db :Session = Depends(dependencies.get_db_session) ,
-    actionVO: ScriptActionVO
+    actionVO: ActionVOCreated
 ) -> Any:
     """
-    Create Script action
+    Update Action
     
     """
     device = getDevice()
@@ -103,11 +103,11 @@ def update_action(
     image = cv2.imdecode(nparr, cv2.COLOR_BGR2GRAY)
         #img_gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
        
-    scriptActionRepo = ScriptActionRepository()
-    scripActionDb = scriptActionRepo.get(db, actionVO.id)
+    scriptRepo = ActionRepository()
+    scripActionDb = scriptRepo.get(db, actionVO.id)
     image_path ="{}/{}/{}.png".format(scripActionDb.script.game,scripActionDb.script_id,scripActionDb.id)
     cv2.imwrite(BASE_IMG_URL+ image_path,image)
-    return scriptActionRepo.update(db = db, db_obj=scripActionDb, obj_in = actionVO)
+    return scriptRepo.update(db = db, db_obj=scripActionDb, obj_in = actionVO)
 
 @router.delete("/{id}", response_model= str, status_code=201)
 def delete_action(
@@ -115,24 +115,24 @@ def delete_action(
     db :Session = Depends(dependencies.get_db_session) ,  
 ) -> Any:
     """
-    Create Script action
+    Delete Action
     """
-    scriptActionRepo = ScriptActionRepository()
-    scriptActionRepo.remove(db = db,id= id)
+    scriptRepo = ActionRepository()
+    scriptRepo.remove(db = db,id= id)
 
     return "delete OK"
 
 
-@router.get("/{id}", response_model= ScriptActionVO, status_code=201)
-def delete_action_by(
+@router.get("/{id}", response_model= ActionVO, status_code=201)
+def delete_scripts(
     id: int, 
     db :Session = Depends(dependencies.get_db_session) ,  
 ) -> Any:
     """
-    Delete Script action
+    Delete Scripts
     """
-    scriptActionRepo = ScriptActionRepository()
-    return scriptActionRepo.get(db = db,id= id)
+    scriptRepo = ActionRepository()
+    return scriptRepo.get(db = db,id= id)
 
 @router.post("/reload-current-img", response_model= str, status_code=201)
 def reloadCurrentImg() -> Any:
@@ -152,7 +152,7 @@ def reloadCurrentImg() -> Any:
     return "OK"
 
 @router.post("/run", response_model= str, status_code=201)
-def run(actionVO: ScriptActionVO) -> Any:
+def run(actionVO: ActionVO) -> Any:
     """
     run
     """

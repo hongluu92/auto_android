@@ -80,11 +80,7 @@
   max-width: 100px;
 }
 
-::-webkit-scrollbar {
-  width: 0;  /* Remove scrollbar space */
-  height: 0;
-  background: transparent;  /* Optional: just make scrollbar invisible */
-}
+
 
 /* hide file-table scroll bar when not needed */
 .auto-hide-scroll-table .ant-table-body {

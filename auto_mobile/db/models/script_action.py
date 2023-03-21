@@ -1,25 +1,20 @@
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Identity
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Identity, ForeignKey
+from sqlalchemy.orm import relationship, backref
 from .base import Base
-from .script import Script
+
+if TYPE_CHECKING:
+    from .action import Action
 
 class ScriptAction(Base):
     __tablename__ = "script_actions"
 
-    id = Column(Integer,Identity(start=1, cycle=True), primary_key=True, index=True, autoincrement=True)
-    # step_action; break_condition
-    action_type = Column(String)
-    # tap, key_event, compare_image, swipe, check
-    event_type = Column(String)
-
-    tap_position = Column(String, comment= "x y")
-    swipe_position = Column(String , comment = "swipe from (x_start,y_start) to (x_end y_end): x_start y_start x_end y_end")
-    img_compare_bb = Column(String, comment = "Boudingbox image need to compare: x_start y_start x_end y_end")
-    key_event = Column(String)
-    img = Column(String, comment = "Current Image")
+    script_id = Column(Integer,ForeignKey("scripts.id"), primary_key=True, index=True)
+    action_id = Column(Integer,ForeignKey("actions.id"), primary_key=True, index=True)
     loop = Column(Integer, default= 0)
-    loop_delay = Column(Integer, default= 1000)
-    description = Column(String)
-    script_id = Column(Integer, ForeignKey("scripts.id"))
-    script:Script   = relationship("Script", back_populates="actions")  
+    loop_delay = Column(Integer, default= 1)
+    action  = relationship("Action", backref=backref("action", remote_side='Action.id'), lazy= "joined")
+    script = relationship("Script", back_populates="scriptActions", lazy='joined' )
+
+
+
